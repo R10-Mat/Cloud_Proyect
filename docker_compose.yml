@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  fastapi_services:
+    build: ./fastapi
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql_db
+    environment:
+      - DATABASE_URL=mysql+pymysql://user:password@mysql_db:3306/mydb
+
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+
+
