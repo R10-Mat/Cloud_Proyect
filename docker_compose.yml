@@ -1,15 +1,19 @@
 version: "3.9"
 
 services:
-  fastapi_services:
-    build: ./fastapi
-    container_name: fastapi_app
+  ms_flota:
+    build: ./Backend/MS-FLOTA
+    container_name: ms_flota_app
     ports:
       - "8000:8000"
     depends_on:
       - mysql_db
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_HOST=mysql_db
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
 
   mysql_db:
     image: mysql:8.0
