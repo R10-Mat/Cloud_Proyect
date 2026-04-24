@@ -1,10 +1,10 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from app.database import Base, engine
 from app.models.flota import Conductor, Vehiculo
 from app.routers.flota import router as flota_router
-
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="MS-FLOTA API",
@@ -12,7 +12,43 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Configurar CORS para permitir peticiones desde el frontend (Vite)
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(flota_router)
+
+
+@app.on_event("startup")
+def on_startup_create_tables():
+    import time
+    from sqlalchemy.exc import OperationalError
+
+    max_attempts = 20
+    attempt = 0
+    while attempt < max_attempts:
+        try:
+            # intentamos conectar y crear las tablas
+            with engine.connect():
+                Base.metadata.create_all(bind=engine)
+            break
+        except OperationalError:
+            attempt += 1
+            time.sleep(1)
+    if attempt == max_attempts:
+        # Si no pudimos conectar, dejamos que la app continúe y falle visiblemente en logs
+        pass
 
 
 @app.get("/")
