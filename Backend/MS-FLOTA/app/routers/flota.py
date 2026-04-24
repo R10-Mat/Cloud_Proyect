@@ -1,21 +1,22 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, status
 
-from app.database import get_db
-from app.models.flota import Conductor, Vehiculo
+from app.dependencies import get_conductor_service, get_vehiculo_service
+from app.services.flota import ConductorService, VehiculoService
 from app.schemas.flota import (
     ConductorCreate,
+    ConductorUpdate,
     ConductorResponse,
     VehiculoCreate,
+    VehiculoUpdate,
     VehiculoResponse,
 )
 
 router = APIRouter(prefix="/flota", tags=["Flota"])
 
 
-
+# ── Conductores ───────────────────────────────────────────────────────────────
 
 @router.post(
     "/conductores/",
@@ -23,20 +24,11 @@ router = APIRouter(prefix="/flota", tags=["Flota"])
     status_code=status.HTTP_201_CREATED,
     summary="Crear un conductor",
 )
-def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
-    
-    existe = db.query(Conductor).filter(Conductor.licencia == conductor.licencia).first()
-    if existe:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ya existe un conductor con la licencia '{conductor.licencia}'.",
-        )
-
-    nuevo_conductor = Conductor(**conductor.model_dump())
-    db.add(nuevo_conductor)
-    db.commit()
-    db.refresh(nuevo_conductor)
-    return nuevo_conductor
+def crear_conductor(
+    conductor: ConductorCreate,
+    service: ConductorService = Depends(get_conductor_service),
+):
+    return service.create(conductor)
 
 
 @router.get(
@@ -44,11 +36,48 @@ def crear_conductor(conductor: ConductorCreate, db: Session = Depends(get_db)):
     response_model=List[ConductorResponse],
     summary="Listar todos los conductores",
 )
-def listar_conductores(db: Session = Depends(get_db)):
-    return db.query(Conductor).all()
+def listar_conductores(service: ConductorService = Depends(get_conductor_service)):
+    return service.get_all()
 
 
+@router.get(
+    "/conductores/{conductor_id}",
+    response_model=ConductorResponse,
+    summary="Obtener un conductor por ID",
+)
+def obtener_conductor(
+    conductor_id: int,
+    service: ConductorService = Depends(get_conductor_service),
+):
+    return service.get_by_id(conductor_id)
 
+
+@router.patch(
+    "/conductores/{conductor_id}",
+    response_model=ConductorResponse,
+    summary="Actualizar un conductor",
+)
+def actualizar_conductor(
+    conductor_id: int,
+    conductor: ConductorUpdate,
+    service: ConductorService = Depends(get_conductor_service),
+):
+    return service.update(conductor_id, conductor)
+
+
+@router.delete(
+    "/conductores/{conductor_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar un conductor",
+)
+def eliminar_conductor(
+    conductor_id: int,
+    service: ConductorService = Depends(get_conductor_service),
+):
+    service.delete(conductor_id)
+
+
+# ── Vehículos ─────────────────────────────────────────────────────────────────
 
 @router.post(
     "/vehiculos/",
@@ -56,17 +85,54 @@ def listar_conductores(db: Session = Depends(get_db)):
     status_code=status.HTTP_201_CREATED,
     summary="Registrar un vehículo",
 )
-def registrar_vehiculo(vehiculo: VehiculoCreate, db: Session = Depends(get_db)):
-    
-    conductor = db.query(Conductor).filter(Conductor.id == vehiculo.conductor_id).first()
-    if not conductor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No existe un conductor con id {vehiculo.conductor_id}.",
-        )
+def registrar_vehiculo(
+    vehiculo: VehiculoCreate,
+    service: VehiculoService = Depends(get_vehiculo_service),
+):
+    return service.create(vehiculo)
 
-    nuevo_vehiculo = Vehiculo(**vehiculo.model_dump())
-    db.add(nuevo_vehiculo)
-    db.commit()
-    db.refresh(nuevo_vehiculo)
-    return nuevo_vehiculo
+
+@router.get(
+    "/vehiculos/",
+    response_model=List[VehiculoResponse],
+    summary="Listar todos los vehículos",
+)
+def listar_vehiculos(service: VehiculoService = Depends(get_vehiculo_service)):
+    return service.get_all()
+
+
+@router.get(
+    "/vehiculos/{vehiculo_id}",
+    response_model=VehiculoResponse,
+    summary="Obtener un vehículo por ID",
+)
+def obtener_vehiculo(
+    vehiculo_id: int,
+    service: VehiculoService = Depends(get_vehiculo_service),
+):
+    return service.get_by_id(vehiculo_id)
+
+
+@router.patch(
+    "/vehiculos/{vehiculo_id}",
+    response_model=VehiculoResponse,
+    summary="Actualizar un vehículo",
+)
+def actualizar_vehiculo(
+    vehiculo_id: int,
+    vehiculo: VehiculoUpdate,
+    service: VehiculoService = Depends(get_vehiculo_service),
+):
+    return service.update(vehiculo_id, vehiculo)
+
+
+@router.delete(
+    "/vehiculos/{vehiculo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar un vehículo",
+)
+def eliminar_vehiculo(
+    vehiculo_id: int,
+    service: VehiculoService = Depends(get_vehiculo_service),
+):
+    service.delete(vehiculo_id)
