@@ -15,6 +15,16 @@ services:
       - MYSQL_PORT=3306
       - MYSQL_DATABASE=${MYSQL_DATABASE}
 
+  ms_orquestador:
+    build: ./Backend/MS-ORQUESTADOR
+    container_name: ms_orquestador_app
+    ports:
+      - "8001:8001"
+    depends_on:
+      - ms_flota
+    environment:
+      - FLOTA_URL=http://ms_flota:8000
+
   mysql_db:
     image: mysql:8.0
     container_name: mysql_db
