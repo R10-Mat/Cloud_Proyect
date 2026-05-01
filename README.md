@@ -36,13 +36,13 @@ MS-ANALITICA :8002
 
 ### Requisito único: Docker Desktop
 
-Todo el backend corre dentro de Docker, no necesitás instalar Python, Java, Node.js ni ninguna base de datos por separado.
+Todo el backend corre dentro de Docker, no necesitas instalar Python, Java, Node.js ni ninguna base de datos por separado.
 
 **Descargar Docker Desktop:**
 - **Mac**: https://www.docker.com/products/docker-desktop → "Download for Mac"
 - **Windows**: https://www.docker.com/products/docker-desktop → "Download for Windows"
 
-> En Windows asegurate de tener WSL 2 habilitado (Docker Desktop lo pide al instalar).
+> En Windows asegúrate de tener WSL 2 habilitado (Docker Desktop lo solicita durante la instalación).
 
 ---
 
@@ -60,7 +60,7 @@ git clone https://github.com/R10-Mat/Cloud_Proyect.git
 cd Cloud_Proyect
 ```
 
-> Si no tenés Git: https://git-scm.com/downloads
+> Si no tienes Git instalado: https://git-scm.com/downloads
 
 ---
 
@@ -76,13 +76,13 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-El archivo `.env` ya tiene valores por defecto que funcionan localmente. No necesitás cambiar nada para correr el proyecto (excepto MS-ANALITICA que requiere credenciales AWS reales).
+El archivo `.env` ya tiene valores por defecto que funcionan localmente. No necesitas cambiar nada para correr el proyecto (excepto MS-ANALITICA que requiere credenciales AWS reales).
 
 ---
 
 ### Paso 3 — Levantar todos los servicios
 
-Asegurate de que Docker Desktop esté abierto y corriendo, luego:
+Asegúrate de que Docker Desktop esté abierto y corriendo, luego:
 
 ```bash
 docker-compose up --build
@@ -103,7 +103,7 @@ Cuando veas esto en los logs, todo está listo:
 
 ### Paso 4 — Levantar el Frontend
 
-Abrí **otra terminal** (sin cerrar la del docker-compose) y ejecutá:
+Abre **otra terminal** (sin cerrar la del docker-compose) y ejecuta:
 
 **Requiere Node.js 20+**: https://nodejs.org → LTS
 
@@ -113,7 +113,7 @@ npm install
 npm run dev
 ```
 
-Luego abrí en el navegador: **http://localhost:5173**
+Luego abre en el navegador: **http://localhost:5173**
 
 ---
 
