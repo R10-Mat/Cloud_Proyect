@@ -5,9 +5,9 @@ services:
   # ============================
   # Las BDs están en VM3 (172.31.37.211), configuradas en el .env
 
-  ms_flota:
+  ms-flota:
     build: ./Backend/MS-FLOTA
-    container_name: ms_flota_app
+    container_name: ms-flota-app
     ports:
       - "8000:8000"
     environment:
@@ -20,9 +20,9 @@ services:
     networks:
       - delivery_network
 
-  ms_pedidos:
+  ms-pedidos:
     build: ./Backend/MS-PEDIDOS
-    container_name: ms_pedidos_app
+    container_name: ms-pedidos-app
     ports:
       - "8080:8080"
     environment:
@@ -35,9 +35,9 @@ services:
     networks:
       - delivery_network
 
-  ms_eventos:
+  ms-eventos:
     build: ./Backend/MS-EVENTOS
-    container_name: ms_eventos_app
+    container_name: ms-eventos-app
     ports:
       - "3000:3000"
     environment:
@@ -49,26 +49,26 @@ services:
     networks:
       - delivery_network
 
-  ms_orquestador:
+  ms-orquestador:
     build: ./Backend/MS-ORQUESTADOR
-    container_name: ms_orquestador_app
+    container_name: ms-orquestador-app
     ports:
       - "8001:8001"
     depends_on:
-      - ms_flota
-      - ms_pedidos
-      - ms_eventos
+      - ms-flota
+      - ms-pedidos
+      - ms-eventos
     environment:
-      - MS_FLOTA_URL=http://ms_flota_app:8000
-      - MS_PEDIDOS_URL=http://ms_pedidos_app:8080
-      - MS_EVENTOS_URL=http://ms_eventos_app:3000
+      - MS_FLOTA_URL=http://ms-flota-app:8000
+      - MS_PEDIDOS_URL=http://ms-pedidos-app:8080
+      - MS_EVENTOS_URL=http://ms-eventos-app:3000
     restart: on-failure
     networks:
       - delivery_network
 
-  ms_analitica:
+  ms-analitica:
     build: ./Backend/MS-ANALITICA
-    container_name: ms_analitica_app
+    container_name: ms-analitica-app
     ports:
       - "8002:8002"
     environment:
