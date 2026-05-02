@@ -9,7 +9,7 @@ MS_FLOTA_URL = os.getenv("MS_FLOTA_URL", "http://ms_flota_app:8000")
 MS_PEDIDOS_URL = os.getenv("MS_PEDIDOS_URL", "http://ms_pedidos_app:8080")
 MS_EVENTOS_URL = os.getenv("MS_EVENTOS_URL", "http://ms_eventos_app:3000")
 
-TIMEOUT = httpx.Timeout(10.0)
+TIMEOUT = httpx.Timeout(80.0)
 
 
 def _extraer_lista_pedidos(data) -> list:
