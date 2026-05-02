@@ -89,3 +89,44 @@ async def obtener_detalle_envio(pedido_id: int) -> dict[str, Any]:
     ]
 
     return {"pedido": pedido, "linea_tiempo": linea_tiempo}
+
+
+async def registrar_evento_logistico(pedido_id: int, tipo_evento: str, descripcion: str, conductor_id: int = 0) -> None:
+    """Registra un evento en MS-EVENTOS sin interrumpir el flujo principal."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        payload = {
+            "pedido_id": pedido_id,
+            "conductor_id": conductor_id,
+            "tipo_evento": tipo_evento,
+            "descripcion": descripcion,
+            "coordenadas": {"lat": 0.0, "lng": 0.0}
+        }
+        try:
+            r = await client.post(f"{MS_EVENTOS_URL}/eventos/", json=payload)
+            r.raise_for_status()
+            logger.info("MS-EVENTOS: Evento registrado para pedido %s", pedido_id)
+        except Exception as e:
+            logger.error("Error registrando evento en MS-EVENTOS para pedido %s: %s", pedido_id, e)
+
+
+async def crear_pedido(datos_pedido: dict) -> dict[str, Any]:
+    """Crea un pedido en MS-PEDIDOS y registra el evento inicial."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        # 1. Crear el pedido en MS-PEDIDOS
+        r_pedido = await client.post(f"{MS_PEDIDOS_URL}/api/pedidos", json=datos_pedido)
+        
+        # Si falla, lanzamos excepción para que el orquestador retorne error (por ejemplo 400 o 500)
+        r_pedido.raise_for_status()
+        
+        pedido_creado = r_pedido.json()
+        pedido_id = pedido_creado.get("id")
+
+        if pedido_id:
+            # 2. Registrar el evento logístico (falla de forma segura por el try/except interno)
+            await registrar_evento_logistico(
+                pedido_id=pedido_id,
+                tipo_evento="CREADO",
+                descripcion="Pedido creado desde el Orquestador"
+            )
+
+        return pedido_creado
