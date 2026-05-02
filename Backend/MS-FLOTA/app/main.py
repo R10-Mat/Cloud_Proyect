@@ -12,16 +12,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configurar CORS para permitir peticiones desde el frontend (Vite)
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-]
-
+# Configurar CORS global (permite cualquier origen: dev local + AWS Amplify)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

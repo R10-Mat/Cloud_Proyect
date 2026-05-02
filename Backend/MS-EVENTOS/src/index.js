@@ -12,15 +12,18 @@ app.use(express.json());
 
 // Construcción de la URI de MongoDB desde variables de entorno
 const {
+  MONGO_HOST,
   MONGO_INITDB_ROOT_USERNAME,
   MONGO_INITDB_ROOT_PASSWORD,
   MONGO_DATABASE,
   MONGO_URI,
 } = process.env;
 
+const mongoHost = MONGO_HOST || "mongo_db";
+
 const mongoUri =
   MONGO_URI ||
-  `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo_db:27017/${MONGO_DATABASE}?authSource=admin`;
+  `mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${mongoHost}:27017/${MONGO_DATABASE}?authSource=admin`;
 
 mongoose
   .connect(mongoUri)

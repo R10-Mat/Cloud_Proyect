@@ -1,84 +1,19 @@
 services:
 
   # ============================
-  # BASES DE DATOS
+  # MICROSERVICIOS (VM1/VM2 - Capa de Aplicación)
   # ============================
-
-  mysql_db:
-    image: mysql:8.0
-    container_name: mysql_db
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - delivery_network
-
-  postgres_pedidos:
-    image: postgres:16-alpine
-    container_name: postgres_pedidos
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_pedidos_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - delivery_network
-
-  mongo_db:
-    image: mongo:6
-    container_name: mongo_db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - delivery_network
-
-  # ============================
-  # MICROSERVICIOS
-  # ============================
+  # Las BDs están en VM3 (172.31.37.211), configuradas en el .env
 
   ms_flota:
     build: ./Backend/MS-FLOTA
     container_name: ms_flota_app
     ports:
       - "8000:8000"
-    depends_on:
-      mysql_db:
-        condition: service_healthy
     environment:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_HOST=mysql_db
+      - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_PORT=3306
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     restart: on-failure
@@ -90,11 +25,8 @@ services:
     container_name: ms_pedidos_app
     ports:
       - "8080:8080"
-    depends_on:
-      postgres_pedidos:
-        condition: service_healthy
     environment:
-      - POSTGRES_HOST=postgres_pedidos
+      - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -108,10 +40,8 @@ services:
     container_name: ms_eventos_app
     ports:
       - "3000:3000"
-    depends_on:
-      mongo_db:
-        condition: service_healthy
     environment:
+      - MONGO_HOST=${MONGO_HOST}
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
       - MONGO_DATABASE=${MONGO_DATABASE}
@@ -150,14 +80,6 @@ services:
     restart: on-failure
     networks:
       - delivery_network
-
-# ============================
-# VOLÚMENES
-# ============================
-volumes:
-  mysql_data:
-  postgres_pedidos_data:
-  mongo_data:
 
 # ============================
 # REDES
