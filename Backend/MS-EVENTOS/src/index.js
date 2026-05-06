@@ -1,5 +1,4 @@
 const express = require("express");
-const cors = require("cors");
 const mongoose = require("mongoose");
 
 const eventosRouter = require("./routes/eventos");
@@ -7,7 +6,6 @@ const eventosRouter = require("./routes/eventos");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
 
 // Construcción de la URI de MongoDB desde variables de entorno

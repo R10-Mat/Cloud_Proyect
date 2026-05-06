@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import os
 
 from app.database import Base, engine
@@ -10,15 +9,6 @@ app = FastAPI(
     title="MS-FLOTA API",
     description="Microservicio de gestión de flota: conductores y vehículos.",
     version="1.0.0",
-)
-
-# Configurar CORS global (permite cualquier origen: dev local + AWS Amplify)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 app.include_router(flota_router)

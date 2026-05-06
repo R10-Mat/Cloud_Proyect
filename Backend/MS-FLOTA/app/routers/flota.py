@@ -16,7 +16,6 @@ from app.schemas.flota import (
 router = APIRouter(prefix="/flota", tags=["Flota"])
 
 
-# ── Conductores ───────────────────────────────────────────────────────────────
 
 @router.post(
     "/conductores/",
@@ -77,7 +76,7 @@ def eliminar_conductor(
     service.delete(conductor_id)
 
 
-# ── Vehículos ─────────────────────────────────────────────────────────────────
+
 
 @router.post(
     "/vehiculos/",
