@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.analitica import router as analitica_router
 
@@ -6,6 +7,15 @@ app = FastAPI(
     title="MS-ANALITICA",
     description="Microservicio de reportes analíticos con AWS Athena - Last Mile Delivery",
     version="1.0.0",
+)
+
+# CORS: permitir requests desde Amplify y cualquier origen
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(analitica_router)
