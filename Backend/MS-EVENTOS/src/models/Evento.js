@@ -7,7 +7,7 @@ const EventoSchema = new mongoose.Schema(
     tipo_evento: {
       type: String,
       required: true,
-      enum: ["recogido", "en_camino", "retraso", "entregado", "fallido"],
+      enum: ["creado", "pendiente", "asignado", "en_camino", "recogido", "retraso", "entregado", "fallido", "cancelado"],
     },
     descripcion: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },

@@ -1,9 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+import uuid
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 import httpx
 from datetime import datetime, timezone
 
-from app.services.orquestador import obtener_resumen, obtener_detalle_envio, crear_pedido
+from app.schemas import ActualizarEstadoRequest
+from app.services.orquestador import (
+    obtener_resumen,
+    obtener_detalle_envio,
+    crear_pedido,
+    actualizar_estado_pedido,
+    procesar_pedidos_bulk,
+)
 
 app = FastAPI(
     title="MS-ORQUESTADOR",
@@ -11,15 +19,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS: permitir requests desde Amplify y cualquier origen
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# ── CORS delegado al API Gateway (no se usa CORSMiddleware) ──────────────────
 
+# ── Estado de tareas en background (in-memory) ──────────────────────────────
+tareas_estado: dict[str, dict] = {}
+
+
+# ── Health / Root ────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -31,6 +37,8 @@ def health():
     return {"status": "ok", "servicio": "ms-orquestador"}
 
 
+# ── Dashboard: resumen ───────────────────────────────────────────────────────
+
 @app.get("/dashboard/resumen")
 async def dashboard_resumen():
     datos = await obtener_resumen()
@@ -41,6 +49,8 @@ async def dashboard_resumen():
     }
 
 
+# ── Dashboard: detalle de envío ──────────────────────────────────────────────
+
 @app.get("/dashboard/envio/{pedido_id}")
 async def dashboard_envio(pedido_id: int):
     detalle = await obtener_detalle_envio(pedido_id)
@@ -48,6 +58,8 @@ async def dashboard_envio(pedido_id: int):
         raise HTTPException(status_code=404, detail=f"Pedido {pedido_id} no encontrado")
     return detalle
 
+
+# ── Dashboard: crear pedido (individual) ─────────────────────────────────────
 
 @app.post("/dashboard/pedido", status_code=201)
 async def dashboard_crear_pedido(datos_pedido: dict):
@@ -59,6 +71,64 @@ async def dashboard_crear_pedido(datos_pedido: dict):
         raise HTTPException(
             status_code=exc.response.status_code,
             detail=f"Error en MS-PEDIDOS: {exc.response.text}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Dashboard: crear pedidos masivamente (bulk) ──────────────────────────────
+
+@app.post("/dashboard/pedidos/bulk", status_code=202)
+async def dashboard_crear_pedidos_bulk(
+    lista_pedidos: list[dict],
+    background_tasks: BackgroundTasks,
+):
+    """
+    Acepta una lista de pedidos y los procesa en background.
+    Retorna 202 Accepted inmediatamente con un task_id para polling.
+    """
+    task_id = str(uuid.uuid4())
+    tareas_estado[task_id] = {
+        "estado": "procesando",
+        "total": len(lista_pedidos),
+        "procesados": 0,
+        "errores": [],
+    }
+    background_tasks.add_task(procesar_pedidos_bulk, task_id, lista_pedidos, tareas_estado)
+    return {"task_id": task_id, "mensaje": "Procesamiento iniciado", "total": len(lista_pedidos)}
+
+
+# ── Dashboard: consultar estado de tarea bulk ────────────────────────────────
+
+@app.get("/dashboard/tarea/{task_id}")
+async def consultar_tarea(task_id: str):
+    """Permite al frontend hacer polling del progreso de una carga masiva."""
+    tarea = tareas_estado.get(task_id)
+    if tarea is None:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    return tarea
+
+
+# ── Dashboard: actualizar estado de pedido ───────────────────────────────────
+
+@app.patch("/dashboard/pedido/{pedido_id}/estado")
+async def dashboard_actualizar_estado(pedido_id: int, request: ActualizarEstadoRequest):
+    """
+    Actualiza el estado de un pedido:
+    1. PATCH a MS-PEDIDOS
+    2. Registra el evento en MS-EVENTOS
+    """
+    try:
+        resultado = await actualizar_estado_pedido(
+            pedido_id=pedido_id,
+            nuevo_estado=request.estado.value,
+            conductor_id=request.conductor_id,
+        )
+        return resultado
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=exc.response.status_code,
+            detail=f"Error en MS-PEDIDOS: {exc.response.text}",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

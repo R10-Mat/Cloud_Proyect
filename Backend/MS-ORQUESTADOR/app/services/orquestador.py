@@ -125,8 +125,60 @@ async def crear_pedido(datos_pedido: dict) -> dict[str, Any]:
             # 2. Registrar el evento logístico (falla de forma segura por el try/except interno)
             await registrar_evento_logistico(
                 pedido_id=pedido_id,
-                tipo_evento="CREADO",
+                tipo_evento="creado",
                 descripcion="Pedido creado desde el Orquestador"
             )
 
         return pedido_creado
+
+
+async def actualizar_estado_pedido(pedido_id: int, nuevo_estado: str, conductor_id: int = None) -> dict[str, Any]:
+    """Actualiza el estado en MS-PEDIDOS y registra el evento en MS-EVENTOS."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        # 1. PATCH a MS-PEDIDOS
+        payload: dict[str, Any] = {"estado": nuevo_estado}
+        if conductor_id is not None:
+            payload["conductorId"] = conductor_id
+
+        r = await client.patch(
+            f"{MS_PEDIDOS_URL}/api/pedidos/{pedido_id}/estado",
+            json=payload,
+        )
+        r.raise_for_status()
+        pedido_actualizado = r.json()
+
+        # 2. Registrar evento en MS-EVENTOS (en minúsculas para Mongoose)
+        await registrar_evento_logistico(
+            pedido_id=pedido_id,
+            tipo_evento=nuevo_estado.lower(),
+            descripcion=f"Estado actualizado a {nuevo_estado}",
+            conductor_id=conductor_id or 0,
+        )
+
+        return pedido_actualizado
+
+
+async def procesar_pedidos_bulk(task_id: str, lista_pedidos: list[dict], tareas_estado: dict) -> None:
+    """Procesa una lista de pedidos en lote. Se ejecuta como BackgroundTask."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        for i, pedido in enumerate(lista_pedidos):
+            try:
+                r = await client.post(f"{MS_PEDIDOS_URL}/api/pedidos", json=pedido)
+                r.raise_for_status()
+                pedido_creado = r.json()
+                pedido_id = pedido_creado.get("id")
+                if pedido_id:
+                    await registrar_evento_logistico(
+                        pedido_id=pedido_id,
+                        tipo_evento="creado",
+                        descripcion="Pedido creado (carga masiva)",
+                    )
+            except Exception as e:
+                logger.error("Bulk pedido #%d falló: %s", i, e)
+                tareas_estado[task_id]["errores"].append(
+                    {"index": i, "error": str(e)}
+                )
+            tareas_estado[task_id]["procesados"] = i + 1
+
+    tareas_estado[task_id]["estado"] = "completado"
+    logger.info("Bulk task %s completada: %d/%d", task_id, tareas_estado[task_id]["procesados"], tareas_estado[task_id]["total"])
