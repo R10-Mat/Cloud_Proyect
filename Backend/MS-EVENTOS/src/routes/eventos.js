@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
   try {
     const { pedido_id, conductor_id, tipo_evento, descripcion, coordenadas } = req.body;
 
-    if (!pedido_id || !conductor_id || !tipo_evento || !descripcion) {
+    if (pedido_id == null || conductor_id == null || !tipo_evento || !descripcion) {
       return res.status(400).json({ error: "Campos requeridos: pedido_id, conductor_id, tipo_evento, descripcion" });
     }
 

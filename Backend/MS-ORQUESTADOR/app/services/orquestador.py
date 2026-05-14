@@ -105,8 +105,13 @@ async def registrar_evento_logistico(pedido_id: int, tipo_evento: str, descripci
             r = await client.post(f"{MS_EVENTOS_URL}/eventos/", json=payload)
             r.raise_for_status()
             logger.info("MS-EVENTOS: Evento registrado para pedido %s", pedido_id)
+        except httpx.HTTPStatusError as exc:
+            logger.error(
+                "MS-EVENTOS respondió %s para pedido %s: %s",
+                exc.response.status_code, pedido_id, exc.response.text,
+            )
         except Exception as e:
-            logger.error("Error registrando evento en MS-EVENTOS para pedido %s: %s", pedido_id, e)
+            logger.error("Error de conexión con MS-EVENTOS para pedido %s: %s", pedido_id, e)
 
 
 async def crear_pedido(datos_pedido: dict) -> dict[str, Any]:
