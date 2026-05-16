@@ -51,3 +51,19 @@ class ConductorResponse(ConductorBase):
 
     class Config:
         from_attributes = True
+
+
+class PaginatedConductorResponse(BaseModel):
+    content: List[ConductorResponse]
+    totalElements: int
+    totalPages: int
+    page: int
+    size: int
+
+
+class PaginatedVehiculoResponse(BaseModel):
+    content: List[VehiculoResponse]
+    totalElements: int
+    totalPages: int
+    page: int
+    size: int

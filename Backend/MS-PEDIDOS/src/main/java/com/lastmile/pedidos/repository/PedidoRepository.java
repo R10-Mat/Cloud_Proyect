@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
@@ -26,4 +29,13 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     // Pedidos pendientes (sin conductor asignado)
     @Query("SELECT p FROM Pedido p WHERE p.estado = 'PENDIENTE' ORDER BY p.fechaCreacion ASC")
     List<Pedido> findPendientesOrdenados();
+
+    // ── Overloads paginados ─────────────────────────────────────────────────
+    Page<Pedido> findByEstado(EstadoPedido estado, Pageable pageable);
+
+    @Query(
+        value = "SELECT p FROM Pedido p WHERE p.estado = 'PENDIENTE' ORDER BY p.fechaCreacion ASC",
+        countQuery = "SELECT COUNT(p) FROM Pedido p WHERE p.estado = 'PENDIENTE'"
+    )
+    Page<Pedido> findPendientesOrdenados(Pageable pageable);
 }

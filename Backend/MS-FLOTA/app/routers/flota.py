@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.dependencies import get_conductor_service, get_vehiculo_service
 from app.services.flota import ConductorService, VehiculoService
@@ -8,9 +8,11 @@ from app.schemas.flota import (
     ConductorCreate,
     ConductorUpdate,
     ConductorResponse,
+    PaginatedConductorResponse,
     VehiculoCreate,
     VehiculoUpdate,
     VehiculoResponse,
+    PaginatedVehiculoResponse,
 )
 
 router = APIRouter(prefix="/flota", tags=["Flota"])
@@ -32,11 +34,15 @@ def crear_conductor(
 
 @router.get(
     "/conductores/",
-    response_model=List[ConductorResponse],
-    summary="Listar todos los conductores",
+    response_model=PaginatedConductorResponse,
+    summary="Listar conductores (paginado)",
 )
-def listar_conductores(service: ConductorService = Depends(get_conductor_service)):
-    return service.get_all()
+def listar_conductores(
+    page: int = Query(0, ge=0, description="Número de página (0-indexed)"),
+    size: int = Query(20, ge=1, le=100, description="Registros por página"),
+    service: ConductorService = Depends(get_conductor_service),
+):
+    return service.get_all(page, size)
 
 
 @router.get(
@@ -93,11 +99,15 @@ def registrar_vehiculo(
 
 @router.get(
     "/vehiculos/",
-    response_model=List[VehiculoResponse],
-    summary="Listar todos los vehículos",
+    response_model=PaginatedVehiculoResponse,
+    summary="Listar vehículos (paginado)",
 )
-def listar_vehiculos(service: VehiculoService = Depends(get_vehiculo_service)):
-    return service.get_all()
+def listar_vehiculos(
+    page: int = Query(0, ge=0, description="Número de página (0-indexed)"),
+    size: int = Query(20, ge=1, le=100, description="Registros por página"),
+    service: VehiculoService = Depends(get_vehiculo_service),
+):
+    return service.get_all(page, size)
 
 
 @router.get(

@@ -13,8 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +68,39 @@ public class PedidoService {
         return pedidoRepository.findPendientesOrdenados().stream()
                 .map(mapper::toResumen)
                 .collect(Collectors.toList());
+    }
+
+    // ── Versiones PAGINADAS ─────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> listarPedidosPaginado(Pageable pageable) {
+        Page<Pedido> page = pedidoRepository.findAll(pageable);
+        return buildPageResponse(page);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> listarPorEstadoPaginado(EstadoPedido estado, Pageable pageable) {
+        Page<Pedido> page = pedidoRepository.findByEstado(estado, pageable);
+        return buildPageResponse(page);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> listarPendientesPaginado(Pageable pageable) {
+        Page<Pedido> page = pedidoRepository.findPendientesOrdenados(pageable);
+        return buildPageResponse(page);
+    }
+
+    private Map<String, Object> buildPageResponse(Page<Pedido> page) {
+        List<PedidoDTO.PedidoResumenResponse> content = page.getContent().stream()
+                .map(mapper::toResumen)
+                .collect(Collectors.toList());
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("content", content);
+        response.put("totalElements", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+        response.put("page", page.getNumber());
+        response.put("size", page.getSize());
+        return response;
     }
 
     // ── Actualizar estado (llamado por el orquestador o el conductor) ──────────

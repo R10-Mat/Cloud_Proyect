@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 import httpx
 from datetime import datetime, timezone
 
@@ -11,6 +11,9 @@ from app.services.orquestador import (
     crear_pedido,
     actualizar_estado_pedido,
     procesar_pedidos_bulk,
+    listar_conductores,
+    listar_vehiculos,
+    listar_pedidos,
 )
 
 app = FastAPI(
@@ -132,3 +135,53 @@ async def dashboard_actualizar_estado(pedido_id: int, request: ActualizarEstadoR
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Proxy paginado: conductores ──────────────────────────────────────────────
+
+@app.get("/dashboard/conductores")
+async def dashboard_conductores(
+    page: int = Query(0, ge=0),
+    size: int = Query(20, ge=1, le=100),
+):
+    """Proxy pass-through a MS-FLOTA: conductores paginados."""
+    try:
+        return await listar_conductores(page, size)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+# ── Proxy paginado: vehículos ────────────────────────────────────────────────
+
+@app.get("/dashboard/vehiculos")
+async def dashboard_vehiculos(
+    page: int = Query(0, ge=0),
+    size: int = Query(20, ge=1, le=100),
+):
+    """Proxy pass-through a MS-FLOTA: vehículos paginados."""
+    try:
+        return await listar_vehiculos(page, size)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+# ── Proxy paginado: pedidos ──────────────────────────────────────────────────
+
+@app.get("/dashboard/pedidos")
+async def dashboard_pedidos(
+    page: int = Query(0, ge=0),
+    size: int = Query(20, ge=1, le=100),
+    estado: str = Query(None),
+):
+    """Proxy pass-through a MS-PEDIDOS: pedidos paginados."""
+    try:
+        return await listar_pedidos(page, size, estado)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+

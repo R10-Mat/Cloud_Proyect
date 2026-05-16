@@ -30,34 +30,37 @@ def _extraer_lista_pedidos(data) -> list:
 
 
 async def obtener_resumen() -> dict[str, Any]:
+    """Obtiene conteos sin cargar todos los registros (usa page=0&size=1)."""
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        # ── Conductores ──────────────────────────────────────────────────
+        # ── Conductores (solo totalElements) ──────────────────────────
         try:
-            r_conductores = await client.get(f"{MS_FLOTA_URL}/flota/conductores/")
+            r_conductores = await client.get(
+                f"{MS_FLOTA_URL}/flota/conductores/",
+                params={"page": 0, "size": 1},
+            )
             r_conductores.raise_for_status()
-            conductores = r_conductores.json()
-            if not isinstance(conductores, list):
-                logger.warning("MS-FLOTA: respuesta inesperada (no es lista): %s", type(conductores))
-                conductores = []
+            data = r_conductores.json()
+            total_conductores = data.get("totalElements", 0)
         except Exception as e:
             logger.error("Error consultando MS-FLOTA: %s", e)
-            conductores = []
+            total_conductores = 0
 
-        # ── Pedidos ──────────────────────────────────────────────────────
+        # ── Pedidos (solo totalElements) ─────────────────────────────
         try:
-            r_pedidos = await client.get(f"{MS_PEDIDOS_URL}/api/pedidos")
-            logger.info("MS-PEDIDOS respondió status=%s", r_pedidos.status_code)
+            r_pedidos = await client.get(
+                f"{MS_PEDIDOS_URL}/api/pedidos",
+                params={"page": 0, "size": 1},
+            )
             r_pedidos.raise_for_status()
-            raw = r_pedidos.json()
-            logger.info("MS-PEDIDOS respuesta raw type=%s", type(raw))
-            pedidos_data = _extraer_lista_pedidos(raw)
+            data = r_pedidos.json()
+            total_pedidos = data.get("totalElements", 0)
         except Exception as e:
             logger.error("Error consultando MS-PEDIDOS: %s", e)
-            pedidos_data = []
+            total_pedidos = 0
 
     return {
-        "total_conductores": len(conductores),
-        "total_pedidos": len(pedidos_data),
+        "total_conductores": total_conductores,
+        "total_pedidos": total_pedidos,
     }
 
 
@@ -187,3 +190,42 @@ async def procesar_pedidos_bulk(task_id: str, lista_pedidos: list[dict], tareas_
 
     tareas_estado[task_id]["estado"] = "completado"
     logger.info("Bulk task %s completada: %d/%d", task_id, tareas_estado[task_id]["procesados"], tareas_estado[task_id]["total"])
+
+
+# ── Proxy pass-through paginados ────────────────────────────────────────────
+
+async def listar_conductores(page: int = 0, size: int = 20) -> dict:
+    """Proxy a MS-FLOTA: conductores paginados."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        r = await client.get(
+            f"{MS_FLOTA_URL}/flota/conductores/",
+            params={"page": page, "size": size},
+        )
+        r.raise_for_status()
+        return r.json()
+
+
+async def listar_vehiculos(page: int = 0, size: int = 20) -> dict:
+    """Proxy a MS-FLOTA: vehículos paginados."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        r = await client.get(
+            f"{MS_FLOTA_URL}/flota/vehiculos/",
+            params={"page": page, "size": size},
+        )
+        r.raise_for_status()
+        return r.json()
+
+
+async def listar_pedidos(page: int = 0, size: int = 20, estado: str = None) -> dict:
+    """Proxy a MS-PEDIDOS: pedidos paginados con filtro opcional por estado."""
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        params: dict[str, Any] = {"page": page, "size": size}
+        if estado:
+            params["estado"] = estado
+        r = await client.get(
+            f"{MS_PEDIDOS_URL}/api/pedidos",
+            params=params,
+        )
+        r.raise_for_status()
+        return r.json()
+

@@ -10,6 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -28,23 +32,35 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ── GET /api/pedidos ───────────────────────────────────────────────────────
-    // Listar todos los pedidos (resumen), opcionalmente filtrar por estado
+    // ── GET /api/pedidos ───────────────────────────────────────────────────────────
+    // Listar pedidos paginados, opcionalmente filtrar por estado
     @GetMapping
-    public ResponseEntity<List<PedidoDTO.PedidoResumenResponse>> listarPedidos(
-            @RequestParam(required = false) EstadoPedido estado) {
+    public ResponseEntity<Map<String, Object>> listarPedidos(
+            @RequestParam(required = false) EstadoPedido estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        size = Math.max(1, Math.min(100, size));
+        page = Math.max(0, page);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("id").descending());
 
         if (estado != null) {
-            return ResponseEntity.ok(pedidoService.listarPorEstado(estado));
+            return ResponseEntity.ok(pedidoService.listarPorEstadoPaginado(estado, pageable));
         }
-        return ResponseEntity.ok(pedidoService.listarPedidos());
+        return ResponseEntity.ok(pedidoService.listarPedidosPaginado(pageable));
     }
 
     // ── GET /api/pedidos/pendientes ────────────────────────────────────────────
-    // Endpoint dedicado para el MS-Orquestador: obtiene pedidos sin asignar
+    // Endpoint dedicado para el MS-Orquestador: obtiene pedidos sin asignar (paginado)
     @GetMapping("/pendientes")
-    public ResponseEntity<List<PedidoDTO.PedidoResumenResponse>> listarPendientes() {
-        return ResponseEntity.ok(pedidoService.listarPendientes());
+    public ResponseEntity<Map<String, Object>> listarPendientes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        size = Math.max(1, Math.min(100, size));
+        page = Math.max(0, page);
+        PageRequest pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(pedidoService.listarPendientesPaginado(pageable));
     }
 
     // ── GET /api/pedidos/{id} ──────────────────────────────────────────────────

@@ -9,8 +9,23 @@ class ConductorService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_all(self) -> list[Conductor]:
-        return self.db.query(Conductor).all()
+    def get_all(self, page: int = 0, size: int = 20) -> dict:
+        total = self.db.query(Conductor).count()
+        items = (
+            self.db.query(Conductor)
+            .order_by(Conductor.id)
+            .offset(page * size)
+            .limit(size)
+            .all()
+        )
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return {
+            "content": items,
+            "totalElements": total,
+            "totalPages": total_pages,
+            "page": page,
+            "size": size,
+        }
 
     def get_by_id(self, conductor_id: int) -> Conductor:
         conductor = self.db.query(Conductor).filter(Conductor.id == conductor_id).first()
@@ -65,8 +80,23 @@ class VehiculoService:
                 detail=f"No existe un conductor con id {conductor_id}.",
             )
 
-    def get_all(self) -> list[Vehiculo]:
-        return self.db.query(Vehiculo).all()
+    def get_all(self, page: int = 0, size: int = 20) -> dict:
+        total = self.db.query(Vehiculo).count()
+        items = (
+            self.db.query(Vehiculo)
+            .order_by(Vehiculo.id)
+            .offset(page * size)
+            .limit(size)
+            .all()
+        )
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return {
+            "content": items,
+            "totalElements": total,
+            "totalPages": total_pages,
+            "page": page,
+            "size": size,
+        }
 
     def get_by_id(self, vehiculo_id: int) -> Vehiculo:
         vehiculo = self.db.query(Vehiculo).filter(Vehiculo.id == vehiculo_id).first()
