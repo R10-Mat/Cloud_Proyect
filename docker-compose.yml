@@ -1,32 +1,89 @@
-version: "3.9"
-
 services:
-  ms_flota:
+
+  # ============================
+  # MICROSERVICIOS (VM1/VM2 - Capa de Aplicación)
+  # ============================
+  # Las BDs están en VM3 (172.31.37.211), configuradas en el .env
+
+  ms-flota:
     build: ./Backend/MS-FLOTA
-    container_name: ms_flota_app
+    container_name: ms-flota-app
     ports:
       - "8000:8000"
-    depends_on:
-      - mysql_db
     environment:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_HOST=mysql_db
+      - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_PORT=3306
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+    restart: on-failure
+    networks:
+      - delivery_network
 
-  mysql_db:
-    image: mysql:8.0
-    container_name: mysql_db
+  ms-pedidos:
+    build: ./Backend/MS-PEDIDOS
+    container_name: ms-pedidos-app
+    ports:
+      - "8080:8080"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: on-failure
+    networks:
+      - delivery_network
 
-volumes:
-  mysql_data:
+  ms-eventos:
+    build: ./Backend/MS-EVENTOS
+    container_name: ms-eventos-app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+    restart: on-failure
+    networks:
+      - delivery_network
 
+  ms-orquestador:
+    build: ./Backend/MS-ORQUESTADOR
+    container_name: ms-orquestador-app
+    ports:
+      - "8001:8001"
+    depends_on:
+      - ms-flota
+      - ms-pedidos
+      - ms-eventos
+    environment:
+      - MS_FLOTA_URL=http://ms-flota-app:8000
+      - MS_PEDIDOS_URL=http://ms-pedidos-app:8080
+      - MS_EVENTOS_URL=http://ms-eventos-app:3000
+    restart: on-failure
+    networks:
+      - delivery_network
 
+  ms-analitica:
+    build: ./Backend/MS-ANALITICA
+    container_name: ms-analitica-app
+    ports:
+      - "8002:8002"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - ATHENA_S3_OUTPUT_LOCATION=${ATHENA_S3_OUTPUT_LOCATION}
+      - ATHENA_DATABASE=${ATHENA_DATABASE}
+    restart: on-failure
+    networks:
+      - delivery_network
+
+# ============================
+# REDES
+# ============================
+networks:
+  delivery_network:
+    driver: bridge

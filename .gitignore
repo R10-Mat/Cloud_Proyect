@@ -1,2 +1,16 @@
 .env
 .claude
+
+Scripts/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+
+# Java
+target/
+*.class

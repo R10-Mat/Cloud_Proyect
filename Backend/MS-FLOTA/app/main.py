@@ -12,16 +12,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configurar CORS para permitir peticiones desde el frontend (Vite)
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-]
-
+# CORS: permitir requests desde Amplify y cualquier origen
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,3 +53,4 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
