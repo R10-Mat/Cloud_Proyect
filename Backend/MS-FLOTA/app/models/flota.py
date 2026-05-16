@@ -13,7 +13,7 @@ class Conductor(Base):
     telefono = Column(String(20), nullable=False)
     estado = Column(String(20), default="disponible", nullable=False)
 
-    vehiculos = relationship("Vehiculo", back_populates="conductor")
+    vehiculos = relationship("Vehiculo", back_populates="conductor", cascade="all, delete-orphan")
 
 
 class Vehiculo(Base):
