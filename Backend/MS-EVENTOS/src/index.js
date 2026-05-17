@@ -1,7 +1,23 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 const eventosRouter = require("./routes/eventos");
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "MS-EVENTOS API",
+      version: "1.0.0",
+      description: "Microservicio de historial y tracking de eventos de entrega - Last Mile Delivery",
+    },
+    servers: [{ url: "http://localhost:3000" }],
+  },
+  apis: ["./src/routes/*.js"],
+};
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +34,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Construcción de la URI de MongoDB desde variables de entorno
 const {

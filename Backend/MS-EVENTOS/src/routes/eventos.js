@@ -3,7 +3,49 @@ const Evento = require("../models/Evento");
 
 const router = express.Router();
 
-// POST /eventos - Registrar nuevo evento
+/**
+ * @swagger
+ * tags:
+ *   name: Eventos
+ *   description: Historial y tracking de eventos de entrega
+ */
+
+/**
+ * @swagger
+ * /eventos:
+ *   post:
+ *     summary: Registrar nuevo evento
+ *     tags: [Eventos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [pedido_id, conductor_id, tipo_evento, descripcion]
+ *             properties:
+ *               pedido_id:
+ *                 type: integer
+ *               conductor_id:
+ *                 type: integer
+ *               tipo_evento:
+ *                 type: string
+ *                 enum: [ASIGNADO, RECOGIDO, EN_CAMINO, ENTREGADO, FALLIDO]
+ *               descripcion:
+ *                 type: string
+ *               coordenadas:
+ *                 type: object
+ *                 properties:
+ *                   lat: { type: number }
+ *                   lng: { type: number }
+ *     responses:
+ *       201:
+ *         description: Evento registrado exitosamente
+ *       400:
+ *         description: Campos requeridos faltantes o inválidos
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.post("/", async (req, res) => {
   try {
     const { pedido_id, conductor_id, tipo_evento, descripcion, coordenadas } = req.body;
@@ -23,7 +65,27 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /eventos/pedido/:pedido_id - Línea de tiempo de un pedido
+/**
+ * @swagger
+ * /eventos/pedido/{pedido_id}:
+ *   get:
+ *     summary: Obtener línea de tiempo de un pedido
+ *     tags: [Eventos]
+ *     parameters:
+ *       - in: path
+ *         name: pedido_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del pedido
+ *     responses:
+ *       200:
+ *         description: Lista de eventos del pedido ordenados por timestamp
+ *       400:
+ *         description: pedido_id debe ser un número
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.get("/pedido/:pedido_id", async (req, res) => {
   try {
     const pedido_id = parseInt(req.params.pedido_id);
@@ -38,7 +100,31 @@ router.get("/pedido/:pedido_id", async (req, res) => {
   }
 });
 
-// GET /eventos - Listar todos (útil para debugging y dashboard)
+/**
+ * @swagger
+ * /eventos:
+ *   get:
+ *     summary: Listar todos los eventos
+ *     tags: [Eventos]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Cantidad máxima de eventos a retornar
+ *       - in: query
+ *         name: tipo_evento
+ *         schema:
+ *           type: string
+ *           enum: [ASIGNADO, RECOGIDO, EN_CAMINO, ENTREGADO, FALLIDO]
+ *         description: Filtrar por tipo de evento
+ *     responses:
+ *       200:
+ *         description: Lista de eventos
+ *       500:
+ *         description: Error interno del servidor
+ */
 router.get("/", async (req, res) => {
   try {
     const { limit = 50, tipo_evento } = req.query;
