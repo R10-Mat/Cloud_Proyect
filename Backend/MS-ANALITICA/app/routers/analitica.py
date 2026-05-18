@@ -27,8 +27,21 @@ LIMIT 20
 """
 
 
-@router.get("/entregas-por-mes")
+@router.get(
+    "/entregas-por-mes",
+    summary="Reportes de entregas por mes",
+    description="Obtiene estadísticas de entregas completadas por mes (últimos 12 meses) desde AWS Athena."
+)
 async def entregas_por_mes():
+    """Análisis de entregas por mes.
+    
+    Ejecuta una consulta en AWS Athena para obtener el total de entregas
+    exitosas agrupadas por mes de creación.
+    
+    Retorna:
+    - datos: Lista de registros con mes y total de entregas
+    - total_registros: Cantidad de meses con datos
+    """
     try:
         resultados = ejecutar_query(QUERY_ENTREGAS_POR_MES)
         return {"datos": resultados, "total_registros": len(resultados)}
@@ -40,8 +53,21 @@ async def entregas_por_mes():
         raise HTTPException(status_code=500, detail=f"Error ejecutando análisis: {str(e)}")
 
 
-@router.get("/conductores-actividad")
+@router.get(
+    "/conductores-actividad",
+    summary="Actividad de conductores",
+    description="Obtiene métricas de actividad de cada conductor: total eventos, entregas exitosas y fallidas."
+)
 async def conductores_actividad():
+    """Análisis de actividad por conductor.
+    
+    Ejecuta una consulta en AWS Athena para obtener estadísticas de actividad
+    de cada conductor, incluyendo entregas exitosas y fallidas.
+    
+    Retorna:
+    - datos: Lista de conductores con sus estadísticas
+    - total_registros: Cantidad de conductores con actividad
+    """
     try:
         resultados = ejecutar_query(QUERY_CONDUCTORES_ACTIVIDAD)
         return {"datos": resultados, "total_registros": len(resultados)}

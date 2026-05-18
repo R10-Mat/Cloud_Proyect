@@ -87,3 +87,4 @@ services:
 networks:
   delivery_network:
     driver: bridge
+    external: true 

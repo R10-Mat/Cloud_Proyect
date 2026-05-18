@@ -21,6 +21,15 @@ spring:
         format_sql: true
     open-in-view: false         # evita lazy-loading fuera de la transacción
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+
 logging:
   level:
     com.lastmile.pedidos: DEBUG
