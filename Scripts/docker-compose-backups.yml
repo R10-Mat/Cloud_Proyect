@@ -1,0 +1,46 @@
+
+# Las credenciales AWS salen del IAM Role de la EC2 (sin keys).
+# Las credenciales de BD están hardcodeadas para coincidir con VM3.
+
+
+services:
+  backup-flota:
+    build:
+      context: .
+      dockerfile: Dockerfile.flota
+    environment:
+      MYSQL_HOST: "172.31.37.245"
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: "flotadb"
+      MYSQL_USER: "flota_user"
+      MYSQL_PASSWORD: "flota_pass"
+      AWS_DEFAULT_REGION: "us-east-1"
+    restart: "no"
+
+  backup-pedidos:
+    build:
+      context: .
+      dockerfile: Dockerfile.pedidos
+    environment:
+      POSTGRES_HOST: "172.31.37.245"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "pedidosdb"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres123"
+      AWS_DEFAULT_REGION: "us-east-1"
+    restart: "no"
+
+  backup-eventos:
+    build:
+      context: .
+      dockerfile: Dockerfile.eventos
+    environment:
+      MONGO_HOST: "172.31.37.245"
+      MONGO_PORT: "27017"
+      MONGO_INITDB_ROOT_USERNAME: "mongo"
+      MONGO_INITDB_ROOT_PASSWORD: "mongo123"
+      MONGO_DATABASE: "eventosdb"
+      MONGO_AUTH_SOURCE: "admin"
+      MONGO_COLLECTION: "eventos"
+      AWS_DEFAULT_REGION: "us-east-1"
+    restart: "no"
