@@ -59,7 +59,6 @@ public class Pedido {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
 
-    // ── Relación con paquetes ──────────────────────────────────────────────────
     @OneToMany(
         mappedBy = "pedido",
         cascade = CascadeType.ALL,
@@ -69,7 +68,6 @@ public class Pedido {
     @Builder.Default
     private List<DetallePaquete> paquetes = new ArrayList<>();
 
-    // Helper para mantener la bidireccionalidad
     public void agregarPaquete(DetallePaquete paquete) {
         paquetes.add(paquete);
         paquete.setPedido(this);

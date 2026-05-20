@@ -9,15 +9,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Convierte entre entidades JPA y DTOs.
- * Al hacer el mapeo manualmente (sin MapStruct) todo queda explícito
- * y sin dependencias extra que compliquen el build.
- */
+
 @Component
 public class PedidoMapper {
 
-    // ── Entidad → Response completo ────────────────────────────────────────────
     public PedidoDTO.PedidoResponse toResponse(Pedido pedido) {
         return PedidoDTO.PedidoResponse.builder()
                 .id(pedido.getId())
@@ -34,7 +29,6 @@ public class PedidoMapper {
                 .build();
     }
 
-    // ── Entidad → Resumen (para listados) ─────────────────────────────────────
     public PedidoDTO.PedidoResumenResponse toResumen(Pedido pedido) {
         return PedidoDTO.PedidoResumenResponse.builder()
                 .id(pedido.getId())
@@ -46,7 +40,6 @@ public class PedidoMapper {
                 .build();
     }
 
-    // ── Request → Entidad ──────────────────────────────────────────────────────
     public Pedido toEntity(PedidoDTO.CrearPedidoRequest request) {
         Pedido pedido = Pedido.builder()
                 .clienteNombre(request.getClienteNombre())
@@ -56,7 +49,6 @@ public class PedidoMapper {
                 .direccionDestino(request.getDireccionDestino())
                 .build();
 
-        // Mapeamos los paquetes y los asociamos al pedido
         request.getPaquetes().stream()
                 .map(this::toDetalleEntity)
                 .forEach(pedido::agregarPaquete);
@@ -64,7 +56,6 @@ public class PedidoMapper {
         return pedido;
     }
 
-    // ── Helpers paquetes ───────────────────────────────────────────────────────
     private DetallePaquete toDetalleEntity(DetallePaqueteDTO.CrearDetalleRequest req) {
         return DetallePaquete.builder()
                 .descripcion(req.getDescripcion())

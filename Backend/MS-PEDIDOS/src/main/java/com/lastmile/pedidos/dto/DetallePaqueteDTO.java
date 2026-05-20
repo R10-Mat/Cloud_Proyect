@@ -5,9 +5,7 @@ import lombok.*;
 
 public class DetallePaqueteDTO {
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // REQUEST
-    // ──────────────────────────────────────────────────────────────────────────
+    
     @Getter
     @Setter
     @NoArgsConstructor
@@ -39,9 +37,7 @@ public class DetallePaqueteDTO {
         private String instruccionesEntrega;
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // RESPONSE
-    // ──────────────────────────────────────────────────────────────────────────
+    
     @Getter
     @Setter
     @NoArgsConstructor

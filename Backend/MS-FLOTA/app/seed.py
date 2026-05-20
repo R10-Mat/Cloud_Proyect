@@ -37,7 +37,6 @@ def main():
                 db.commit()
             except IntegrityError as e:
                 db.rollback()
-                # Try inserting one-by-one to skip duplicates
                 for obj in batch:
                     try:
                         db.add(obj)

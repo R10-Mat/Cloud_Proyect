@@ -6,7 +6,6 @@ const eventosRouter = require("./routes/eventos");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS: permitir requests desde Amplify y cualquier origen
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -19,7 +18,6 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Construcción de la URI de MongoDB desde variables de entorno
 const {
   MONGO_HOST,
   MONGO_INITDB_ROOT_USERNAME,
@@ -36,9 +34,9 @@ const mongoUri =
 
 mongoose
   .connect(mongoUri)
-  .then(() => console.log("✅ Conectado a MongoDB"))
+  .then(() => console.log(" Conectado a MongoDB"))
   .catch((err) => {
-    console.error("❌ Error conectando a MongoDB:", err.message);
+    console.error(" Error conectando a MongoDB:", err.message);
     process.exit(1);
   });
 

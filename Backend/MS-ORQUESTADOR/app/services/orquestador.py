@@ -14,25 +14,19 @@ TIMEOUT = httpx.Timeout(80.0)
 
 def _extraer_lista_pedidos(data) -> list:
     """Extrae la lista de pedidos sin importar el formato de respuesta de Spring Boot."""
-    # Caso 1: ya es una lista directa → [{ ... }, { ... }]
     if isinstance(data, list):
         return data
-    # Caso 2: Spring Boot devolvió un dict paginado o envuelto
     if isinstance(data, dict):
-        # Paginación estándar de Spring: {"content": [...], "totalElements": N, ...}
         if "content" in data:
             return data["content"]
-        # Posible wrapper personalizado: {"pedidos": [...]}
         if "pedidos" in data:
             return data["pedidos"]
-    # Cualquier otro caso → lista vacía
     return []
 
 
 async def obtener_resumen() -> dict[str, Any]:
     """Obtiene conteos sin cargar todos los registros (usa page=0&size=1)."""
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        # ── Conductores (solo totalElements) ──────────────────────────
         try:
             r_conductores = await client.get(
                 f"{MS_FLOTA_URL}/flota/conductores/",
@@ -45,7 +39,6 @@ async def obtener_resumen() -> dict[str, Any]:
             logger.error("Error consultando MS-FLOTA: %s", e)
             total_conductores = 0
 
-        # ── Pedidos (solo totalElements) ─────────────────────────────
         try:
             r_pedidos = await client.get(
                 f"{MS_PEDIDOS_URL}/api/pedidos",
@@ -120,17 +113,14 @@ async def registrar_evento_logistico(pedido_id: int, tipo_evento: str, descripci
 async def crear_pedido(datos_pedido: dict) -> dict[str, Any]:
     """Crea un pedido en MS-PEDIDOS y registra el evento inicial."""
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        # 1. Crear el pedido en MS-PEDIDOS
         r_pedido = await client.post(f"{MS_PEDIDOS_URL}/api/pedidos", json=datos_pedido)
         
-        # Si falla, lanzamos excepción para que el orquestador retorne error (por ejemplo 400 o 500)
         r_pedido.raise_for_status()
         
         pedido_creado = r_pedido.json()
         pedido_id = pedido_creado.get("id")
 
         if pedido_id:
-            # 2. Registrar el evento logístico (falla de forma segura por el try/except interno)
             await registrar_evento_logistico(
                 pedido_id=pedido_id,
                 tipo_evento="creado",
@@ -143,7 +133,6 @@ async def crear_pedido(datos_pedido: dict) -> dict[str, Any]:
 async def actualizar_estado_pedido(pedido_id: int, nuevo_estado: str, conductor_id: int = None) -> dict[str, Any]:
     """Actualiza el estado en MS-PEDIDOS y registra el evento en MS-EVENTOS."""
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        # 1. PATCH a MS-PEDIDOS
         payload: dict[str, Any] = {"estado": nuevo_estado}
         if conductor_id is not None:
             payload["conductorId"] = conductor_id
@@ -155,7 +144,6 @@ async def actualizar_estado_pedido(pedido_id: int, nuevo_estado: str, conductor_
         r.raise_for_status()
         pedido_actualizado = r.json()
 
-        # 2. Registrar evento en MS-EVENTOS (en minúsculas para Mongoose)
         await registrar_evento_logistico(
             pedido_id=pedido_id,
             tipo_evento=nuevo_estado.lower(),
@@ -192,7 +180,6 @@ async def procesar_pedidos_bulk(task_id: str, lista_pedidos: list[dict], tareas_
     logger.info("Bulk task %s completada: %d/%d", task_id, tareas_estado[task_id]["procesados"], tareas_estado[task_id]["total"])
 
 
-# ── Proxy pass-through paginados ────────────────────────────────────────────
 
 async def listar_conductores(page: int = 0, size: int = 20) -> dict:
     """Proxy a MS-FLOTA: conductores paginados."""

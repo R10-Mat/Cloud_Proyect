@@ -9,7 +9,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS: permitir requests desde Amplify y cualquier origen
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

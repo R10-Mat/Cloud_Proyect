@@ -16,7 +16,6 @@ public class DetallePaquete {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ── Datos del paquete ──────────────────────────────────────────────────────
     @Column(nullable = false, length = 150)
     private String descripcion;
 
@@ -33,12 +32,10 @@ public class DetallePaquete {
     private Double altoCm;
 
     @Column(length = 50)
-    private String fragil;          // "SI" / "NO"
-
+    private String fragil;          
     @Column(name = "instrucciones_entrega", length = 500)
     private String instruccionesEntrega;
 
-    // ── Relación con el pedido padre ───────────────────────────────────────────
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;

@@ -3,7 +3,6 @@ const Evento = require("../models/Evento");
 
 const router = express.Router();
 
-// POST /eventos - Registrar nuevo evento
 router.post("/", async (req, res) => {
   try {
     const { pedido_id, conductor_id, tipo_evento, descripcion, coordenadas } = req.body;
@@ -23,7 +22,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /eventos/pedido/:pedido_id - Línea de tiempo de un pedido
 router.get("/pedido/:pedido_id", async (req, res) => {
   try {
     const pedido_id = parseInt(req.params.pedido_id);
@@ -38,7 +36,6 @@ router.get("/pedido/:pedido_id", async (req, res) => {
   }
 });
 
-// GET /eventos - Listar todos (útil para debugging y dashboard)
 router.get("/", async (req, res) => {
   try {
     const { limit = 50, tipo_evento } = req.query;

@@ -22,13 +22,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# ── CORS delegado al API Gateway (no se usa CORSMiddleware) ──────────────────
 
-# ── Estado de tareas en background (in-memory) ──────────────────────────────
 tareas_estado: dict[str, dict] = {}
 
 
-# ── Health / Root ────────────────────────────────────────────────────────────
 
 @app.get("/")
 def root():
@@ -40,7 +37,6 @@ def health():
     return {"status": "ok", "servicio": "ms-orquestador"}
 
 
-# ── Dashboard: resumen ───────────────────────────────────────────────────────
 
 @app.get("/dashboard/resumen")
 async def dashboard_resumen():
@@ -52,7 +48,6 @@ async def dashboard_resumen():
     }
 
 
-# ── Dashboard: detalle de envío ──────────────────────────────────────────────
 
 @app.get("/dashboard/envio/{pedido_id}")
 async def dashboard_envio(pedido_id: int):
@@ -62,7 +57,6 @@ async def dashboard_envio(pedido_id: int):
     return detalle
 
 
-# ── Dashboard: crear pedido (individual) ─────────────────────────────────────
 
 @app.post("/dashboard/pedido", status_code=201)
 async def dashboard_crear_pedido(datos_pedido: dict):
@@ -70,7 +64,6 @@ async def dashboard_crear_pedido(datos_pedido: dict):
         resultado = await crear_pedido(datos_pedido)
         return resultado
     except httpx.HTTPStatusError as exc:
-        # Re-raise la excepción del backend de pedidos con su mismo código y detalle
         raise HTTPException(
             status_code=exc.response.status_code,
             detail=f"Error en MS-PEDIDOS: {exc.response.text}"
@@ -79,7 +72,6 @@ async def dashboard_crear_pedido(datos_pedido: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Dashboard: crear pedidos masivamente (bulk) ──────────────────────────────
 
 @app.post("/dashboard/pedidos/bulk", status_code=202)
 async def dashboard_crear_pedidos_bulk(
@@ -101,7 +93,6 @@ async def dashboard_crear_pedidos_bulk(
     return {"task_id": task_id, "mensaje": "Procesamiento iniciado", "total": len(lista_pedidos)}
 
 
-# ── Dashboard: consultar estado de tarea bulk ────────────────────────────────
 
 @app.get("/dashboard/tarea/{task_id}")
 async def consultar_tarea(task_id: str):
@@ -112,7 +103,6 @@ async def consultar_tarea(task_id: str):
     return tarea
 
 
-# ── Dashboard: actualizar estado de pedido ───────────────────────────────────
 
 @app.patch("/dashboard/pedido/{pedido_id}/estado")
 async def dashboard_actualizar_estado(pedido_id: int, request: ActualizarEstadoRequest):
@@ -137,7 +127,6 @@ async def dashboard_actualizar_estado(pedido_id: int, request: ActualizarEstadoR
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ── Proxy paginado: conductores ──────────────────────────────────────────────
 
 @app.get("/dashboard/conductores")
 async def dashboard_conductores(
@@ -153,7 +142,6 @@ async def dashboard_conductores(
         raise HTTPException(status_code=502, detail=str(e))
 
 
-# ── Proxy paginado: vehículos ────────────────────────────────────────────────
 
 @app.get("/dashboard/vehiculos")
 async def dashboard_vehiculos(
@@ -169,7 +157,6 @@ async def dashboard_vehiculos(
         raise HTTPException(status_code=502, detail=str(e))
 
 
-# ── Proxy paginado: pedidos ──────────────────────────────────────────────────
 
 @app.get("/dashboard/pedidos")
 async def dashboard_pedidos(

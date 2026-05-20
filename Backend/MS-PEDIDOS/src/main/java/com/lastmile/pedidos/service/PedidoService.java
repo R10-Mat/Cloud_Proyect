@@ -29,7 +29,6 @@ public class PedidoService {
     private final PedidoRepository pedidoRepository;
     private final PedidoMapper mapper;
 
-    // ── Crear pedido ───────────────────────────────────────────────────────────
     @Transactional
     public PedidoDTO.PedidoResponse crearPedido(PedidoDTO.CrearPedidoRequest request) {
         log.info("Creando pedido para cliente: {}", request.getClienteNombre());
@@ -39,14 +38,12 @@ public class PedidoService {
         return mapper.toResponse(guardado);
     }
 
-    // ── Obtener pedido por ID ──────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public PedidoDTO.PedidoResponse obtenerPedido(Long id) {
         Pedido pedido = buscarOFallar(id);
         return mapper.toResponse(pedido);
     }
 
-    // ── Listar todos (resumen) ─────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<PedidoDTO.PedidoResumenResponse> listarPedidos() {
         return pedidoRepository.findAll().stream()
@@ -54,7 +51,6 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
-    // ── Listar por estado ──────────────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<PedidoDTO.PedidoResumenResponse> listarPorEstado(EstadoPedido estado) {
         return pedidoRepository.findByEstado(estado).stream()
@@ -62,7 +58,6 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
-    // ── Listar pendientes (para el orquestador) ────────────────────────────────
     @Transactional(readOnly = true)
     public List<PedidoDTO.PedidoResumenResponse> listarPendientes() {
         return pedidoRepository.findPendientesOrdenados().stream()
@@ -70,7 +65,6 @@ public class PedidoService {
                 .collect(Collectors.toList());
     }
 
-    // ── Versiones PAGINADAS ─────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public Map<String, Object> listarPedidosPaginado(Pageable pageable) {
@@ -103,7 +97,6 @@ public class PedidoService {
         return response;
     }
 
-    // ── Actualizar estado (llamado por el orquestador o el conductor) ──────────
     @Transactional
     public PedidoDTO.PedidoResponse actualizarEstado(Long id,
                                                       PedidoDTO.ActualizarEstadoRequest request) {
@@ -120,7 +113,6 @@ public class PedidoService {
         return mapper.toResponse(pedidoRepository.save(pedido));
     }
 
-    // ── Cancelar pedido ────────────────────────────────────────────────────────
     @Transactional
     public void cancelarPedido(Long id) {
         Pedido pedido = buscarOFallar(id);
@@ -137,7 +129,6 @@ public class PedidoService {
         log.info("Pedido {} cancelado", id);
     }
 
-    // ── Helper ─────────────────────────────────────────────────────────────────
     private Pedido buscarOFallar(Long id) {
         return pedidoRepository.findById(id)
                 .orElseThrow(() -> new PedidoNotFoundException(
@@ -145,10 +136,6 @@ public class PedidoService {
                 ));
     }
 
-    /**
-     * Máquina de estados del pedido.
-     * Define qué transiciones son válidas.
-     */
     private void validarTransicion(EstadoPedido actual, EstadoPedido nuevo) {
         boolean valida = switch (actual) {
             case PENDIENTE  -> nuevo == EstadoPedido.ASIGNADO  || nuevo == EstadoPedido.CANCELADO;

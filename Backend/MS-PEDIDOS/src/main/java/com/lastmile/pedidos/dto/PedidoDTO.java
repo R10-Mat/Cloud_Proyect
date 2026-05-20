@@ -8,9 +8,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// ──────────────────────────────────────────────────────────────────────────────
-// REQUEST: crear pedido
-// ──────────────────────────────────────────────────────────────────────────────
+
 public class PedidoDTO {
 
     @Getter
@@ -42,9 +40,7 @@ public class PedidoDTO {
         private List<DetallePaqueteDTO.CrearDetalleRequest> paquetes;
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // REQUEST: actualizar estado
-    // ──────────────────────────────────────────────────────────────────────────
+    
     @Getter
     @Setter
     @NoArgsConstructor
@@ -57,9 +53,7 @@ public class PedidoDTO {
         private Long conductorId;   // opcional: lo rellena el orquestador
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // RESPONSE: pedido completo
-    // ──────────────────────────────────────────────────────────────────────────
+    
     @Getter
     @Setter
     @NoArgsConstructor
@@ -80,9 +74,7 @@ public class PedidoDTO {
         private List<DetallePaqueteDTO.DetalleResponse> paquetes;
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // RESPONSE: resumen (para listados)
-    // ──────────────────────────────────────────────────────────────────────────
+    
     @Getter
     @Setter
     @NoArgsConstructor

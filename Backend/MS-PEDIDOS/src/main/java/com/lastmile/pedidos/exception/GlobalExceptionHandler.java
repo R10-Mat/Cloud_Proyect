@@ -16,21 +16,18 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── 404: Pedido no encontrado ──────────────────────────────────────────────
     @ExceptionHandler(PedidoNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(PedidoNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
     }
 
-    // ── 422: Transición de estado inválida ────────────────────────────────────
     @ExceptionHandler(TransicionEstadoInvalidaException.class)
     public ResponseEntity<ErrorResponse> handleTransicion(TransicionEstadoInvalidaException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ErrorResponse.of(HttpStatus.UNPROCESSABLE_ENTITY.value(), ex.getMessage()));
     }
 
-    // ── 400: Validaciones de @Valid ────────────────────────────────────────────
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new HashMap<>();
@@ -47,14 +44,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    // ── 500: Error inesperado ──────────────────────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(500, "Error interno: " + ex.getMessage()));
     }
 
-    // ── DTO de error ───────────────────────────────────────────────────────────
     @Getter
     @Builder
     public static class ErrorResponse {
